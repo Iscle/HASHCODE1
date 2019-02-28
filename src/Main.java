@@ -37,37 +37,58 @@ public class Main {
         }
     }
 
-    public void doTheJob(String filename) {
-        Collections.sort(photos, (o1, o2) -> Integer.compare(o2.tags.size(), o1.tags.size()));
+    public void doTheJob2(String filename) {
+        ArrayList<Photo> verticalPhotos = new ArrayList<>();
         photoArray = new ArrayList<>();
 
-        for (int i = 0; i < photos.size(); i++) {
-            ArrayList<Photo> photosTmp = new ArrayList<>();
-            Photo p1 = photos.get(i);
-            photosTmp.add(p1);
-            if (p1.orientation == 'V') {
-                int diferenceBetween = 0;
-                Photo best = null;
-                for (int j = i + 1; j < photos.size(); j++) {
-                    Photo p2 = photos.get(j);
-                    if (p2.orientation == 'V') {
-                        int tmp = tagNumber(p1, p2);
-                        if (tmp > diferenceBetween) {
-                            diferenceBetween = tmp;
-                            best = p2;
-                        }
-                    }
-                }
-                if (best != null) {
-                    photosTmp.add(best);
-                    photos.remove(best);
-                }
+        for (Photo p:photos) {
+            if (p.orientation == 'H') {
+                // Add it to the slides array directly
+                ArrayList<Photo> a = new ArrayList<>();
+                a.add(p);
+                photoArray.add(a);
+            } else {
+                // Add it to the vertical photos array to treat them later
+                verticalPhotos.add(p);
             }
-            photos.remove(p1);
-            i--;
-            photoArray.add(photosTmp);
         }
 
+        Collections.sort(verticalPhotos, (o1, o2) -> Integer.compare(o2.tags.size(), o1.tags.size()));
+
+        for (int i = 0; i < verticalPhotos.size(); i++) {
+            ArrayList<Photo> photosTmp = new ArrayList<>();
+            Photo p1 = verticalPhotos.get(i);
+            photosTmp.add(p1);
+
+            if (i + 1 != verticalPhotos.size()) {
+                Photo p2 = verticalPhotos.get(i + 1);
+                photosTmp.add(p2);
+                verticalPhotos.remove(p2);
+                photoArray.add(photosTmp);
+            }
+
+            verticalPhotos.remove(p1);
+            i--;
+        }
+
+        Collections.sort(photoArray, (o1, o2) -> {
+            int c1 = 0;
+            int c2 = 0;
+
+            if (o1.size() == 1) {
+                c1 = o1.get(0).tags.size();
+            } else {
+                c1 = o1.get(0).tags.size() + o1.get(1).tags.size();
+            }
+
+            if (o2.size() == 1) {
+                c2 = o2.get(0).tags.size();
+            } else {
+                c2 = o2.get(0).tags.size() + o2.get(1).tags.size();
+            }
+
+            return Integer.compare(c2, c1);
+        });
     }
 
     public int tagNumber(Photo p1, Photo p2) {
@@ -102,7 +123,8 @@ public class Main {
         for (String filename:FILENAMES) {
             System.out.println("Working on " + filename);
             main.readFile(filename);
-            main.doTheJob(filename);
+            //main.doTheJob(filename);
+            main.doTheJob2(filename);
             main.writeFile(filename);
         }
     }
